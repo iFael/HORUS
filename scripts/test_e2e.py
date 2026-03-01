@@ -1,4 +1,4 @@
-"""Teste end-to-end interativo do dashboard ORUS."""
+"""Teste end-to-end interativo do dashboard HORUS."""
 import time
 from playwright.sync_api import sync_playwright
 
@@ -54,9 +54,9 @@ with sync_playwright() as p:
     errors3 = page.query_selector_all('[data-testid="stException"]')
     print(f"9. Erros apos voltar: {len(errors3)}")
 
-    # 10. Verificar ORUS e auto-refresh
+    # 10. Verificar HORUS e auto-refresh
     html = page.content()
-    print(f"10. ORUS presente: {'ORUS' in html}")
+    print(f"10. HORUS presente: {'HORUS' in html}")
 
     # 11. Plotly charts
     plotly_charts = page.query_selector_all(".js-plotly-plot")

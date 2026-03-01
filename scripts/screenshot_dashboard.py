@@ -1,5 +1,5 @@
 """
-Script para tirar screenshots automáticas do dashboard ORUS.
+Script para tirar screenshots automáticas do dashboard HORUS.
 Usa Playwright para navegar pelo dashboard e capturar todas as abas.
 """
 

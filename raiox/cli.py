@@ -60,7 +60,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_scan.add_argument("--rapido", action="store_true", help="Pular coleta de despesas")
 
     # -- dashboard ---
-    sub.add_parser("dashboard", help="Abrir dashboard ORUS no navegador")
+    sub.add_parser("dashboard", help="Abrir dashboard HORUS no navegador")
 
     # -- status ---
     sub.add_parser("status", help="Status do banco de dados")
@@ -248,7 +248,7 @@ def cmd_scan(args: argparse.Namespace) -> None:
         console.print(f"  [bold orange1]{etapa}[/bold orange1] {detalhe}")
 
     console.print(Panel(
-        "[bold orange1]⚡ ORUS — Scanner de Políticos[/bold orange1]\n"
+        "[bold orange1]⚡ HORUS — Scanner de Políticos[/bold orange1]\n"
         "[dim]Rastreando deputados e senadores automaticamente...[/dim]",
         border_style="orange1",
     ))
@@ -273,10 +273,10 @@ def cmd_scan(args: argparse.Namespace) -> None:
 
 
 def cmd_dashboard(args: argparse.Namespace) -> None:
-    """Abre o dashboard ORUS."""
+    """Abre o dashboard HORUS."""
     import subprocess
     import sys as _sys
-    console.print("[bold orange1]Abrindo dashboard ORUS...[/bold orange1]")
+    console.print("[bold orange1]Abrindo dashboard HORUS...[/bold orange1]")
     from pathlib import Path as _Path
     web_path = _Path(__file__).parent / "web.py"
     subprocess.Popen([_sys.executable, "-m", "streamlit", "run", str(web_path), "--server.headless", "true"])

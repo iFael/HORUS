@@ -7,7 +7,7 @@ from raiox.database import DatabaseManager
 from raiox.scanner import PoliticianScanner
 
 print("=" * 60)
-print("ORUS — Re-scan com ETLs corrigidos")
+print("HORUS — Re-scan com ETLs corrigidos")
 print("=" * 60)
 
 config = Config()

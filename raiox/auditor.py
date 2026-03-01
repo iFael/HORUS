@@ -96,7 +96,7 @@ class InternalAuditor:
             target=self._loop,
             args=(interval_minutes,),
             daemon=True,
-            name="orus-auditor",
+            name="horus-auditor",
         )
         self._thread.start()
         logger.info(

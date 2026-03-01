@@ -1,4 +1,4 @@
-"""Daemon ORUS — Inicia o sistema completo (scheduler + dashboard).
+"""Daemon HORUS — Inicia o sistema completo (scheduler + dashboard).
 
 Uso:
     python -m raiox.daemon           # Inicia tudo
@@ -17,7 +17,7 @@ from pathlib import Path
 
 from raiox.config import Config
 from raiox.database import DatabaseManager
-from raiox.scheduler import OrusScheduler
+from raiox.scheduler import HorusScheduler
 from raiox.utils import get_logger
 
 logger = get_logger(__name__)
@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 BANNER = r"""
  ╔═══════════════════════════════════════════════════════╗
  ║                                                       ║
- ║    ⚡  O R U S  — Sistema Autônomo de Rastreamento    ║
+ ║    ⚡  H O R U S  — Sistema Autônomo de Rastreamento  ║
  ║                                                       ║
  ║    Monitoramento contínuo de dados públicos            ║
  ║    Análise de anomalias em tempo real                  ║
@@ -36,7 +36,7 @@ BANNER = r"""
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ORUS Daemon — Sistema Autônomo")
+    parser = argparse.ArgumentParser(description="HORUS Daemon — Sistema Autônomo")
     parser.add_argument("--no-web", action="store_true", help="Não inicia o dashboard web")
     parser.add_argument("--full-interval", type=float, default=6, help="Intervalo full scan (horas)")
     parser.add_argument("--quick-interval", type=float, default=1, help="Intervalo quick scan (horas)")
@@ -50,7 +50,7 @@ def main():
     db = DatabaseManager(config)
 
     # --- Inicia o Scheduler ---
-    scheduler = OrusScheduler(db, config)
+    scheduler = HorusScheduler(db, config)
     scheduler.start(
         run_initial_scan=True,
         full_interval_hours=args.full_interval,
@@ -77,7 +77,7 @@ def main():
 
     # --- Graceful shutdown ---
     def shutdown(signum=None, frame=None):
-        logger.info("Encerrando ORUS...")
+        logger.info("Encerrando HORUS...")
         scheduler.stop()
         if web_process:
             web_process.terminate()
@@ -97,7 +97,7 @@ def main():
             errors = status.get("error_count", 0)
             
             print(
-                f"\r  ORUS ⚡ {uptime} | Scans: {scans} | "
+                f"\r  HORUS ⚡ {uptime} | Scans: {scans} | "
                 f"Erros: {errors} | Status: {task}    ",
                 end="", flush=True,
             )

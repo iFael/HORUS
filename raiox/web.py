@@ -1,7 +1,7 @@
-"""Dashboard ORUS — Interface de inteligência para rastreamento de políticos.
+"""Dashboard HORUS — Interface de inteligência para rastreamento de políticos.
 
 O dashboard é apenas a camada de visualização.
-O OrusScheduler roda em background e coleta/analisa dados automaticamente.
+O HorusScheduler roda em background e coleta/analisa dados automaticamente.
 
 LAYOUT: 5 abas (INSIGHTS, ANALYTICS, POLÍTICOS, SCANNER, BASE DE DADOS) — tudo atualiza em tempo real.
 """
@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from raiox.config import Config
 from raiox.database import DatabaseManager
 from raiox.insights import InsightManager, Severidade, formatar_valor
-from raiox.scheduler import OrusScheduler
+from raiox.scheduler import HorusScheduler
 from raiox.utils import get_logger
 
 logger = get_logger(__name__)
@@ -36,7 +36,7 @@ logger = get_logger(__name__)
 # Page config
 # =====================================================================
 st.set_page_config(
-    page_title="ORUS — Rastreamento Público",
+    page_title="HORUS — Rastreamento Público",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -45,7 +45,7 @@ st.set_page_config(
 # =====================================================================
 # AUTO-REFRESH — atualiza a cada 30 segundos sem interação manual
 # =====================================================================
-st_autorefresh(interval=30_000, limit=None, key="orus_autorefresh")
+st_autorefresh(interval=30_000, limit=None, key="horus_autorefresh")
 
 # =====================================================================
 # Singletons
@@ -63,7 +63,7 @@ def get_insight_manager():
 def get_scheduler():
     """Inicia o scheduler autônomo (singleton, roda em background)."""
     db = get_db()
-    sched = OrusScheduler(db)
+    sched = HorusScheduler(db)
     sched.start(
         run_initial_scan=True,
         full_interval_hours=6,
@@ -365,7 +365,7 @@ def render_topbar(stats: dict):
     <div class="topbar">
         <div class="topbar-brand">
             <div class="logo">&#9889;</div>
-            <div class="name">ORUS</div>
+            <div class="name">HORUS</div>
         </div>
         <div class="topbar-stats">
             <div class="topbar-stat">
@@ -655,7 +655,7 @@ def page_overview():
                 <span style="color:#ff6b35;font-weight:600;font-size:12px;margin-top:1px;">{_next_label}</span>
             </div>
             <span style="color:rgba(255,255,255,0.15);font-size:18px;">|</span>
-            <span id="orus-clock" style="font-weight:700;color:#ff6b35;font-size:14px;letter-spacing:3px;"></span>
+            <span id="horus-clock" style="font-weight:700;color:#ff6b35;font-size:14px;letter-spacing:3px;"></span>
         </div>
         <script>
         (function() {{
@@ -664,7 +664,7 @@ def page_overview():
                 var h = String(now.getHours()).padStart(2, '0');
                 var m = String(now.getMinutes()).padStart(2, '0');
                 var s = String(now.getSeconds()).padStart(2, '0');
-                var el = document.getElementById('orus-clock');
+                var el = document.getElementById('horus-clock');
                 if (el) el.textContent = h + ':' + m + ':' + s;
             }}
             updateClock();

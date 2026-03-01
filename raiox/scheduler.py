@@ -1,4 +1,4 @@
-"""Scheduler Autônomo — Mantém o sistema ORUS vivo e atualizado."""
+"""Scheduler Autônomo — Mantém o sistema HORUS vivo e atualizado."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from raiox.auditor import InternalAuditor
 logger = get_logger(__name__)
 
 
-class OrusScheduler:
+class HorusScheduler:
     """Scheduler que roda varreduras automaticamente em background.
     
     Ciclos:
@@ -28,7 +28,7 @@ class OrusScheduler:
         - REFRESH:     a cada 15min (re-analisa anomalias com dados existentes)
     """
 
-    _instance: OrusScheduler | None = None
+    _instance: HorusScheduler | None = None
     _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs):
@@ -316,7 +316,7 @@ class OrusScheduler:
 
         logger.info(
             "╔══════════════════════════════════════════╗\n"
-            "║   ORUS SCHEDULER ATIVO                   ║\n"
+            "║   HORUS SCHEDULER ATIVO                  ║\n"
             "║   Full Scan:  a cada %sh                ║\n"
             "║   Quick Scan: a cada %sh                ║\n"
             "║   Refresh:    a cada %smin              ║\n"
@@ -330,7 +330,7 @@ class OrusScheduler:
             threading.Thread(
                 target=self._initial_scan,
                 daemon=True,
-                name="orus-initial-scan",
+                name="horus-initial-scan",
             ).start()
 
     def _initial_scan(self) -> None:
@@ -382,7 +382,7 @@ class OrusScheduler:
             if self._auditor is not None:
                 self._auditor.stop()
             self._status["running"] = False
-            logger.info("ORUS Scheduler parado")
+            logger.info("HORUS Scheduler parado")
 
     def force_scan(self, scan_type: str = "full") -> None:
         """Força uma varredura imediata."""
