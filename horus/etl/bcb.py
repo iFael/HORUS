@@ -18,11 +18,35 @@ class BCBETL(BaseETL):
     nome_fonte = "bcb"
 
     SERIES_UTEIS = {
+        # Juros e inflação
         "selic": 432,
         "ipca": 433,
         "igpm": 189,
+        # Câmbio / PTAX
         "cambio_compra": 1,
         "cambio_venda": 10813,
+        # PIX
+        "pix_quantidade": 29027,
+        "pix_valor": 29028,
+        # Crédito
+        "credito_total_saldo": 20539,
+        "credito_pf_saldo": 20540,
+        "credito_pj_saldo": 20541,
+        "inadimplencia_total": 21082,
+        # IFData (indicadores selecionados)
+        "ativo_total_sfn": 22707,
+        "lucro_liquido_sfn": 22708,
+        # Base Monetária
+        "base_monetaria": 1788,
+        "m1": 1783,
+        "m2": 1784,
+        "m3": 1785,
+        "m4": 1786,
+        # Reservas Internacionais
+        "reservas_internacionais": 13621,
+        # Capitais Estrangeiros
+        "ide_ingresso": 22885,
+        "ide_saida": 22886,
     }
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, max=30))

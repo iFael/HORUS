@@ -19,6 +19,12 @@ class DATASUSETL(BaseETL):
     # URLs fixas de datasets conhecidos
     DATASETS = {
         "cnes_estabelecimentos": "https://dadosabertos.saude.gov.br/dataset/cnes-dados-abertos",
+        # SIH — Sistema de Informações Hospitalares
+        "sih": "https://dadosabertos.saude.gov.br/dataset/sih-sistema-de-informacoes-hospitalares",
+        # SIM — Sistema de Informações sobre Mortalidade
+        "sim": "https://dadosabertos.saude.gov.br/dataset/sim-sistema-de-informacao-sobre-mortalidade",
+        # SINAN — Sistema de Informação de Agravos de Notificação
+        "sinan": "https://dadosabertos.saude.gov.br/dataset/sinan-sistema-de-informacao-de-agravos-de-notificacao",
     }
 
     def extract(self, **kwargs: Any) -> dict[str, Path]:

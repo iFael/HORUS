@@ -26,6 +26,7 @@ class TSEETL(BaseETL):
         "candidatos": "candidatos-{ano}",
         "bens": "bem-candidato-{ano}",
         "receitas": "prestacao-de-contas-eleitorais-candidatos-{ano}",
+        "resultados": "resultados-{ano}",
     }
 
     def _download_dataset(self, dataset_id: str, raw_dir: Path) -> Path | None:

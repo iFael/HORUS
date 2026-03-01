@@ -69,6 +69,7 @@ class URLs:
     # BCB
     bcb_sgs: str = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{serie}/dados"
     bcb_ptax: str = "https://olinda.bcb.gov.br/olinda/servico/PTAX/versao/v1/odata/"
+    bcb_dadosabertos: str = "https://dadosabertos.bcb.gov.br/dataset/"
     # CVM
     cvm: str = "https://dados.cvm.gov.br/dados/"
     # IBGE
@@ -76,16 +77,57 @@ class URLs:
     ibge_servicos: str = "https://servicodados.ibge.gov.br/api/v1/"
     # SICONFI
     siconfi: str = "https://apidatalake.tesouro.gov.br/ords/siconfi/tt/"
+    # SIAFI
+    siafi: str = "https://apidatalake.tesouro.gov.br/ords/siafi/tt/"
+    # SIOP
+    siop: str = "https://api.siop.planejamento.gov.br/services/v1/"
     # IPEAData
     ipeadata: str = "http://www.ipeadata.gov.br/api/odata4/"
     # Querido Diário
     querido_diario: str = "https://api.queridodiario.ok.org.br/api/gazettes"
+    # DOU
+    dou: str = "https://inlabs.in.gov.br/"
     # DATASUS
     datasus: str = "https://datasus.saude.gov.br/transferencia-de-arquivos/"
+    datasus_abertos: str = "https://dadosabertos.saude.gov.br/dataset/"
+    # Portal Dados Abertos
+    dados_abertos: str = "https://dados.gov.br/dados/api/3/action/"
+    # DataJud / CNJ
+    datajud: str = "https://api-publica.datajud.cnj.jus.br/api_publica_cnj/"
+    # INEP
+    inep: str = "https://dadosabertos.inep.gov.br/api/3/action/"
+    # IBAMA
+    ibama: str = "https://dadosabertos.ibama.gov.br/"
+    # INPE / TerraBrasilis
+    inpe: str = "http://terrabrasilis.dpi.inpe.br/api/v1/"
+    # CAR / SICAR
+    car_sicar: str = "https://car.gov.br/publico/api/v1/"
     # ANVISA
     anvisa: str = "https://dados.anvisa.gov.br/dados/"
     # ANEEL
     aneel: str = "https://dadosabertos.aneel.gov.br/api/3/action/"
+    # ANP
+    anp: str = "https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/"
+    # ANATEL
+    anatel: str = "https://www.anatel.gov.br/dados/api/3/action/"
+    # ANS
+    ans: str = "https://dadosabertos.ans.gov.br/api/3/action/"
+    # ANCINE
+    ancine: str = "https://dados.gov.br/dados/api/3/action/"
+    # ANTT
+    antt: str = "https://dados.antt.gov.br/api/3/action/"
+    # ANTAQ
+    antaq: str = "https://web.antaq.gov.br/api/v1/"
+    # DNIT
+    dnit: str = "https://dados.dnit.gov.br/api/3/action/"
+    # PRF
+    prf: str = "https://dados.gov.br/dados/api/3/action/"
+    # ANAC
+    anac: str = "https://sistemas.anac.gov.br/"
+    # TCU
+    tcu: str = "https://portal.tcu.gov.br/api/v1/"
+    # DATAPREV / INSS
+    dataprev: str = "https://apigateway.conectagov.estaleiro.serpro.gov.br/"
     # Câmara dos Deputados
     camara: str = "https://dadosabertos.camara.leg.br/api/v2"
     # Senado Federal

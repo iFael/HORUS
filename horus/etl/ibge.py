@@ -19,9 +19,24 @@ class IBGEETL(BaseETL):
 
     # Tabelas SIDRA úteis
     TABELAS_SIDRA = {
+        # Preços
         "ipca_mensal": "/t/1737/n1/all/v/2266/p/last%2012/d/v2266%2013",
+        "inpc_mensal": "/t/1736/n1/all/v/44/p/last%2012/d/v44%202",
+        # Contas Nacionais / PIB
         "pib_trimestral": "/t/1846/n1/all/v/all/p/last%204",
+        "pib_municipal": "/t/5938/n6/all/v/37/p/last%201",
+        # População
         "populacao_estimada": "/t/6579/n6/all/v/9324/p/last%201",
+        "censo_populacao": "/t/4714/n1/all/v/93/p/last%201",
+        # PNAD Contínua
+        "pnad_desocupacao": "/t/6381/n1/all/v/4099/p/last%204",
+        "pnad_rendimento": "/t/6387/n1/all/v/5929/p/last%204",
+        # PMC — Pesquisa Mensal de Comércio
+        "pmc_volume": "/t/8881/n1/all/v/7169/p/last%2012",
+        # PIM-PF — Pesquisa Industrial Mensal
+        "pim_pf": "/t/8888/n1/all/v/12606/p/last%2012",
+        # POF — Pesquisa de Orçamentos Familiares (última disponível)
+        "pof_despesas": "/t/2393/n1/all/v/1003/p/last%201",
     }
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, max=30))

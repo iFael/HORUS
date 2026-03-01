@@ -22,6 +22,14 @@ class CVMETL(BaseETL):
     DATASETS = {
         "cia_aberta": "CIA_ABERTA/CAD/DADOS/cad_cia_aberta.csv",
         "fundo": "FI/CAD/DADOS/cad_fi.csv",
+        # Formulário de Referência
+        "fre": "CIA_ABERTA/DOC/FRE/DADOS/fre_cia_aberta.csv",
+        # Fatos Relevantes
+        "fato_relevante": "CIA_ABERTA/DOC/FR/DADOS/fr_cia_aberta.csv",
+        # Insider Trading (Negociação por Insiders)
+        "insider_trading": "CIA_ABERTA/DOC/NEG/DADOS/neg_cia_aberta.csv",
+        # Informações trimestrais
+        "itr": "CIA_ABERTA/DOC/ITR/DADOS/itr_cia_aberta.csv",
     }
 
     def _download(self, path: str, dest: Path) -> Path | None:
