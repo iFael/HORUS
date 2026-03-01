@@ -312,6 +312,21 @@ div[data-testid="stMetric"] [data-testid="stMetricValue"] { font-family: 'JetBra
     }
     lockSelects();
     new MutationObserver(lockSelects).observe(document.body, {childList: true, subtree: true});
+
+    /* Toggle dropdown: clicar no campo abre; clicar de novo fecha */
+    document.addEventListener('click', function(e) {
+        var selectInput = e.target.closest('[data-baseweb="select"] input');
+        if (!selectInput) return;
+        var selectContainer = selectInput.closest('[data-baseweb="select"]');
+        if (!selectContainer) return;
+        var listbox = document.querySelector('[data-baseweb="popover"], [role="listbox"]');
+        if (listbox && listbox.offsetParent !== null) {
+            /* Dropdown já está aberto — fechar via blur */
+            selectInput.blur();
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
 })();
 </script>
 """
@@ -760,18 +775,44 @@ def _render_tab_insights(mgr: InsightManager, stats: dict):
         opcoes_indicador = ["Todos"] + [_TIPO_LABELS.get(t, t) for t in tipos_presentes]
         _label_to_tipo = {_TIPO_LABELS.get(t, t): t for t in tipos_presentes}
 
-        col_filter, _ = st.columns([1, 3])
-        with col_filter:
+        # Severidades presentes
+        sevs_presentes = sorted(
+            {i.get("severidade", "") for i in insights if i.get("severidade")},
+            key=lambda s: ["CRITICO", "ALTO", "MEDIO", "BAIXO"].index(s) if s in ["CRITICO", "ALTO", "MEDIO", "BAIXO"] else 99,
+        )
+        _SEV_LABELS = {"CRITICO": "Crítico", "ALTO": "Alto", "MEDIO": "Médio", "BAIXO": "Baixo"}
+        opcoes_sev = ["Todos"] + [_SEV_LABELS.get(s, s) for s in sevs_presentes]
+        _label_to_sev = {_SEV_LABELS.get(s, s): s for s in sevs_presentes}
+
+        col_f1, col_f2, _ = st.columns([1, 1, 2])
+        with col_f1:
             indicador_filter = st.selectbox(
                 "Filtrar por indicador",
                 opcoes_indicador,
                 label_visibility="collapsed",
             )
-        if indicador_filter == "Todos":
-            filtered = insights
-        else:
+        with col_f2:
+            sev_filter = st.selectbox(
+                "Filtrar por severidade",
+                opcoes_sev,
+                label_visibility="collapsed",
+            )
+
+        filtered = insights
+        if indicador_filter != "Todos":
             tipo_sel = _label_to_tipo.get(indicador_filter, indicador_filter)
-            filtered = [i for i in insights if i.get("tipo") == tipo_sel]
+            filtered = [i for i in filtered if i.get("tipo") == tipo_sel]
+        if sev_filter != "Todos":
+            sev_sel = _label_to_sev.get(sev_filter, sev_filter)
+            filtered = [i for i in filtered if i.get("severidade") == sev_sel]
+
+        if not filtered:
+            st.markdown(
+                '<div class="card" style="text-align:center; padding:30px;">'
+                '<div style="font-size:14px; color:#b0b8cc;">'
+                'Nenhum insight encontrado com esses filtros.</div></div>',
+                unsafe_allow_html=True,
+            )
         for ins in filtered[:30]:
             render_insight_card(ins)
 
@@ -973,7 +1014,7 @@ def _render_tab_scanner(db: DatabaseManager):
         f'<div style="font-size:9px;font-weight:600;letter-spacing:2px;color:#b0b8cc;">UPTIME</div></div>'
         f'<div style="text-align:center;">'
         f'<div style="font-family:JetBrains Mono;font-size:20px;font-weight:800;color:#3b82f6;">{scans}</div>'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:2px;color:#b0b8cc;">SCANS</div></div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:2px;color:#b0b8cc;">VARREDURAS</div></div>'
         f'<div style="text-align:center;">'
         f'<div style="font-family:JetBrains Mono;font-size:20px;font-weight:800;color:{"#ff2d2d" if errors > 0 else "#22c55e"};">{errors}</div>'
         f'<div style="font-size:9px;font-weight:600;letter-spacing:2px;color:#b0b8cc;">ERROS</div></div>'
@@ -983,64 +1024,64 @@ def _render_tab_scanner(db: DatabaseManager):
 
     st.markdown('<div style="margin-top:10px;"></div>', unsafe_allow_html=True)
 
-    # --- Varreduras ---
-    st.markdown('<div class="section-header">Últimas Varreduras</div>', unsafe_allow_html=True)
+    # --- Última Varredura ---
+    st.markdown('<div class="section-header">Última Varredura</div>', unsafe_allow_html=True)
     try:
-        varreduras = db.query("SELECT * FROM varreduras ORDER BY inicio DESC LIMIT 10")
+        varreduras = db.query("SELECT * FROM varreduras ORDER BY inicio DESC LIMIT 1")
     except Exception:
         varreduras = []
 
     if varreduras:
-        for v in varreduras:
-            status_str = v.get("status", "")
-            # Detecta varreduras travadas (em_andamento > 1h sem fim)
-            is_stale = False
-            if status_str == "em_andamento":
-                try:
-                    from datetime import timedelta
-                    scan_start = datetime.fromisoformat(v.get("inicio", ""))
-                    if datetime.now() - scan_start > timedelta(hours=1):
-                        is_stale = True
-                except Exception:
-                    pass
+        v = varreduras[0]
+        status_str = v.get("status", "")
+        # Detecta varreduras travadas (em_andamento > 1h sem fim)
+        is_stale = False
+        if status_str == "em_andamento":
+            try:
+                from datetime import timedelta
+                scan_start = datetime.fromisoformat(v.get("inicio", ""))
+                if datetime.now() - scan_start > timedelta(hours=1):
+                    is_stale = True
+            except Exception:
+                pass
 
-            if status_str == "concluido":
-                icon = "✅"
-                badge_style = "background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.3);"
-                badge_text = "CONCLUÍDO"
-            elif status_str == "erro":
-                icon = "❌"
-                badge_style = "background:rgba(255,45,45,0.1);color:#ff2d2d;border:1px solid rgba(255,45,45,0.3);"
-                badge_text = "ERRO"
-            elif status_str == "interrompido" or is_stale:
-                icon = "⚠️"
-                badge_style = "background:rgba(255,140,0,0.1);color:#ff8c00;border:1px solid rgba(255,140,0,0.3);"
-                badge_text = "INTERROMPIDO"
-            else:
-                icon = "⏳"
-                badge_style = "background:rgba(255,184,0,0.1);color:#ffb800;border:1px solid rgba(255,184,0,0.3);"
-                badge_text = status_str.upper().replace("_", " ") if status_str else "PENDENTE"
+        if status_str == "concluido":
+            icon = "✅"
+            badge_style = "background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.3);"
+            badge_text = "CONCLUÍDO"
+        elif status_str == "erro":
+            icon = "❌"
+            badge_style = "background:rgba(255,45,45,0.1);color:#ff2d2d;border:1px solid rgba(255,45,45,0.3);"
+            badge_text = "ERRO"
+        elif status_str == "interrompido" or is_stale:
+            icon = "⚠️"
+            badge_style = "background:rgba(255,140,0,0.1);color:#ff8c00;border:1px solid rgba(255,140,0,0.3);"
+            badge_text = "INTERROMPIDO"
+        else:
+            icon = "⏳"
+            badge_style = "background:rgba(255,184,0,0.1);color:#ffb800;border:1px solid rgba(255,184,0,0.3);"
+            badge_text = status_str.upper().replace("_", " ") if status_str else "PENDENTE"
 
-            inicio = v.get("inicio", "")[:19]
-            n_pol = v.get("total_politicos", 0)
-            n_ins = v.get("total_insights", 0)
+        inicio = v.get("inicio", "")[:19]
+        n_pol = v.get("total_politicos", 0)
+        n_ins = v.get("total_insights", 0)
 
-            st.markdown(
-                f'<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;'
-                f'padding:12px 16px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;'
-                f'transition:all 0.25s ease;" onmouseover="this.style.boxShadow=\'0 4px 20px rgba(0,0,0,0.3)\'" onmouseout="this.style.boxShadow=\'none\'">'
-                f'<div style="display:flex;align-items:center;gap:10px;">'
-                f'<span style="font-size:16px;">{icon}</span>'
-                f'<div>'
-                f'<div style="font-family:JetBrains Mono;font-size:12px;color:#ffffff;">{inicio}</div>'
-                f'<div style="font-size:11px;color:#b0b8cc;margin-top:2px;">'
-                f'{n_pol} políticos &middot; {n_ins} insights</div>'
-                f'</div></div>'
-                f'<span style="{badge_style}padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:1px;">'
-                f'{badge_text}</span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
+        st.markdown(
+            f'<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:10px;'
+            f'padding:12px 16px;display:flex;justify-content:space-between;align-items:center;'
+            f'transition:all 0.25s ease;" onmouseover="this.style.boxShadow=\'0 4px 20px rgba(0,0,0,0.3)\'" onmouseout="this.style.boxShadow=\'none\'">'
+            f'<div style="display:flex;align-items:center;gap:10px;">'
+            f'<span style="font-size:16px;">{icon}</span>'
+            f'<div>'
+            f'<div style="font-family:JetBrains Mono;font-size:12px;color:#ffffff;">{inicio}</div>'
+            f'<div style="font-size:11px;color:#b0b8cc;margin-top:2px;">'
+            f'{n_pol} políticos &middot; {n_ins} insights</div>'
+            f'</div></div>'
+            f'<span style="{badge_style}padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:1px;">'
+            f'{badge_text}</span>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
     else:
         st.markdown(
             '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;'
@@ -1072,7 +1113,7 @@ def _render_tab_scanner(db: DatabaseManager):
         f'<div style="display:flex;gap:24px;">'
         f'<div style="text-align:center;">'
         f'<div style="font-family:JetBrains Mono;font-size:18px;font-weight:800;color:#8b5cf6;">{audit_fixes}</div>'
-        f'<div style="font-size:9px;font-weight:600;letter-spacing:1px;color:#b0b8cc;">CORRIGIDOS</div></div>'
+        f'<div style="font-size:9px;font-weight:600;letter-spacing:1px;color:#b0b8cc;">ITENS CORRIGIDOS</div></div>'
         f'<div style="text-align:center;">'
         f'<div style="font-family:JetBrains Mono;font-size:12px;font-weight:600;color:#b0b8cc;">{last_audit_fmt}</div>'
         f'<div style="font-size:9px;font-weight:600;letter-spacing:1px;color:#b0b8cc;">ÚLTIMA EXEC.</div></div>'
