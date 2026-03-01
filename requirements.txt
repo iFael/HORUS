@@ -1,0 +1,28 @@
+# ============================================================
+# RaioX Público BR — Dependências
+# ============================================================
+
+# Core
+pandas>=2.0
+requests>=2.31
+python-dotenv>=1.0
+
+# ETL & Analysis
+networkx>=3.0
+tqdm>=4.65
+tenacity>=8.2
+rich>=13.0
+thefuzz[speedup]>=0.20
+
+# Web Dashboard
+streamlit>=1.40
+plotly>=5.18
+streamlit-autorefresh>=1.0
+
+# Scheduler
+apscheduler>=3.10
+
+# Dev (opcional)
+# pytest>=7.0
+# responses>=0.23
+# ruff

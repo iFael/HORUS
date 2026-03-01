@@ -1,0 +1,51 @@
+# ============================================================
+# RaioX Público BR — .gitignore
+# ============================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Secrets — NUNCA subir tokens/chaves
+.env
+
+# Dados locais (banco SQLite + exports + raw/processed)
+data/
+exports/
+*.db
+*.sqlite
+
+# Logs
+*.log
+
+# Testes / cobertura
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Scripts temporários (debug/manutenção)
+_*.py
