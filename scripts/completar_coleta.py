@@ -2,8 +2,8 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raiox.config import Config
-from raiox.database import DatabaseManager
+from horus.config import Config
+from horus.database import DatabaseManager
 
 config = Config()
 db = DatabaseManager(config)
@@ -11,7 +11,7 @@ db = DatabaseManager(config)
 # ── 1. Contratos dos órgãos que faltaram (52000=Defesa, 20000=Presidência) ──
 print("=" * 50)
 print("1. CONTRATOS restantes...")
-from raiox.etl.transparencia import TransparenciaETL
+from horus.etl.transparencia import TransparenciaETL
 transp = TransparenciaETL(db)
 
 for cod in ["52000", "20000"]:
@@ -28,7 +28,7 @@ for cod in ["52000", "20000"]:
 
 # ── 2. Sanções CGU ──
 print("\n2. SANÇÕES CGU...")
-from raiox.etl.cgu_sancoes import SancoesETL
+from horus.etl.cgu_sancoes import SancoesETL
 sancoes = SancoesETL(db)
 try:
     raw = sancoes.extract()
@@ -61,7 +61,7 @@ for ano in [2023, 2024]:
 
 # ── 4. Re-rodar anomalias ──
 print("\n4. ANÁLISE DE ANOMALIAS...")
-from raiox.anomaly_detector import AnomalyDetector
+from horus.anomaly_detector import AnomalyDetector
 detector = AnomalyDetector(db, config)
 insights = detector.detect_all()
 print(f"  → {len(insights)} insights gerados")

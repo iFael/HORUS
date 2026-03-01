@@ -1,9 +1,9 @@
-"""Testes para raiox.analysis."""
+"""Testes para horus.analysis."""
 
 import pytest
 
-from raiox.analysis import GraphAnalysis
-from raiox.graph_builder import GraphBuilder, NodeType, EdgeType
+from horus.analysis import GraphAnalysis
+from horus.graph_builder import GraphBuilder, NodeType, EdgeType
 
 
 class TestGraphAnalysis:

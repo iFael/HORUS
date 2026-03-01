@@ -2,8 +2,8 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raiox.config import Config
-from raiox.database import DatabaseManager
+from horus.config import Config
+from horus.database import DatabaseManager
 
 config = Config()
 db = DatabaseManager(config)
@@ -23,7 +23,7 @@ print(f"\n  Contratos com CNPJ+valor: {r[0]['c']}")
 
 # Re-rodar anomalias
 print("\nRODANDO ANOMALIAS...")
-from raiox.anomaly_detector import AnomalyDetector
+from horus.anomaly_detector import AnomalyDetector
 detector = AnomalyDetector(db, config)
 try:
     insights = detector.detect_all()

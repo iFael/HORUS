@@ -1,6 +1,6 @@
-"""Testes para raiox.utils."""
+"""Testes para horus.utils."""
 
-from raiox.utils import (
+from horus.utils import (
     limpar_documento,
     validar_cpf,
     validar_cnpj,

@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="raiox-publico-br",
+    name="horus",
     version="1.0.0",
     description="Sistema de análise de risco em dados públicos brasileiros",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
-    author="RaioX Público BR Contributors",
+    author="HORUS Contributors",
     license="MIT",
     python_requires=">=3.10",
     packages=find_packages(),
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "raiox=raiox.cli:main",
+            "horus=horus.cli:main",
         ],
     },
 )

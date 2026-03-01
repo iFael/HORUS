@@ -1,8 +1,8 @@
-"""Testes para raiox.risk_engine."""
+"""Testes para horus.risk_engine."""
 
 import pytest
 
-from raiox.risk_engine import RiskEngine, ResultadoRisco, IndicadorRisco
+from horus.risk_engine import RiskEngine, ResultadoRisco, IndicadorRisco
 
 
 class TestRiskEngine:

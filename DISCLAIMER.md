@@ -2,7 +2,7 @@
 
 ## Aviso Legal
 
-Este software — **RaioX Público BR** — é uma ferramenta de análise de dados públicos
+Este software — **HORUS** — é uma ferramenta de análise de dados públicos
 abertos destinada exclusivamente a fins de **pesquisa, jornalismo investigativo,
 controle social e transparência pública**.
 

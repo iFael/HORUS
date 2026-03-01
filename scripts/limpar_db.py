@@ -2,7 +2,7 @@
 import sqlite3
 import os
 
-db = os.path.join(os.path.dirname(__file__), "..", "data", "raiox.db")
+db = os.path.join(os.path.dirname(__file__), "..", "data", "horus.db")
 conn = sqlite3.connect(db)
 c = conn.cursor()
 

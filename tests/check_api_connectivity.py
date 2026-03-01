@@ -1,5 +1,5 @@
 """
-Teste de conectividade real de TODAS as APIs usadas pelo RaioX Público BR.
+Teste de conectividade real de TODAS as APIs usadas pelo HORUS.
 Testa se cada endpoint responde (HTTP 200) com dados válidos.
 Não requer token (exceto Portal da Transparência que exige chave-api-dados).
 """
@@ -68,7 +68,7 @@ def test_api(nome: str, url: str, headers: dict | None = None,
 
 def main():
     print("=" * 70)
-    print(" RaioX Público BR — Teste de Conectividade de APIs")
+    print(" HORUS — Teste de Conectividade de APIs")
     print(f" Data: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print("=" * 70)
 

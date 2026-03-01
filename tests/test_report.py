@@ -1,12 +1,12 @@
-"""Testes para raiox.report."""
+"""Testes para horus.report."""
 
 import pytest
 from pathlib import Path
 
-from raiox.report import ReportGenerator
-from raiox.risk_engine import RiskEngine
-from raiox.analysis import GraphAnalysis
-from raiox.graph_builder import GraphBuilder
+from horus.report import ReportGenerator
+from horus.risk_engine import RiskEngine
+from horus.analysis import GraphAnalysis
+from horus.graph_builder import GraphBuilder
 
 
 class TestReportGenerator:
@@ -26,7 +26,7 @@ class TestReportGenerator:
         path = gen.generate(resultado, analysis, formato="markdown", output_dir=tmp_path)
         assert Path(path).exists()
         content = Path(path).read_text(encoding="utf-8")
-        assert "RaioX Público BR" in content
+        assert "HORUS" in content
         assert "JOAO DA SILVA" in content
 
     def test_generate_json(self, populated_db, tmp_path):

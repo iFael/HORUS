@@ -2,8 +2,8 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raiox.config import Config
-from raiox.database import DatabaseManager
+from horus.config import Config
+from horus.database import DatabaseManager
 
 config = Config()
 db = DatabaseManager(config)

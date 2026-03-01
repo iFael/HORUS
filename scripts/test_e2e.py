@@ -67,7 +67,7 @@ with sync_playwright() as p:
     print(f"12. Insight cards: {len(insight_cards)}")
 
     # 13. Screenshot final
-    page.screenshot(path="c:/Users/Rafael/OneDrive/Desktop/Project/RaioX_Publico_BR/screenshots/test_final.png", full_page=True)
+    page.screenshot(path="c:/Users/Rafael/OneDrive/Desktop/Project/HORUS/screenshots/test_final.png", full_page=True)
     print("13. Screenshot final salva")
 
     browser.close()

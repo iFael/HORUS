@@ -1,6 +1,6 @@
-"""Testes para raiox.config."""
+"""Testes para horus.config."""
 
-from raiox.config import Config, Paths, URLs, RiskParams
+from horus.config import Config, Paths, URLs, RiskParams
 
 
 def test_config_defaults():

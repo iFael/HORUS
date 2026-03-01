@@ -2,9 +2,9 @@
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from raiox.config import Config
-from raiox.database import DatabaseManager
-from raiox.scanner import PoliticianScanner
+from horus.config import Config
+from horus.database import DatabaseManager
+from horus.scanner import PoliticianScanner
 
 print("=" * 60)
 print("HORUS — Re-scan com ETLs corrigidos")

@@ -29,7 +29,7 @@ def tmp_data_dir(tmp_path: Path) -> Path:
 def config(tmp_data_dir: Path):
     """Config com diretório temporário."""
     os.environ["DATA_DIR"] = str(tmp_data_dir)
-    from raiox.config import Config, Paths
+    from horus.config import Config, Paths
     paths = Paths(
         data=tmp_data_dir,
         raw=tmp_data_dir / "raw",
@@ -45,7 +45,7 @@ def config(tmp_data_dir: Path):
 @pytest.fixture
 def db(config):
     """Instância de DatabaseManager com banco temporário."""
-    from raiox.database import DatabaseManager
+    from horus.database import DatabaseManager
     return DatabaseManager(config)
 
 

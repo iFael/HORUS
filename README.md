@@ -1,4 +1,4 @@
-# 🔍 RaioX Público BR
+# 🔍 HORUS
 
 Sistema open-source de análise de risco em dados públicos brasileiros
 
@@ -9,7 +9,7 @@ Sistema open-source de análise de risco em dados públicos brasileiros
 
 ## Visão Geral
 
-O **RaioX Público BR** é um sistema forense de dados que cruza dezenas de bases públicas brasileiras para construir um **grafo de conhecimento** e calcular **scores de risco neutros (0–100)** para agentes públicos e empresas.
+O **HORUS** é um sistema forense de dados que cruza dezenas de bases públicas brasileiras para construir um **grafo de conhecimento** e calcular **scores de risco neutros (0–100)** para agentes públicos e empresas.
 
 > ⚠️ **IMPORTANTE**: Este sistema **NÃO acusa ninguém de crime**. Ele calcula apenas padrões estatísticos de risco baseados em indicadores objetivos extraídos de dados públicos abertos.
 
@@ -55,8 +55,8 @@ O **RaioX Público BR** é um sistema forense de dados que cruza dezenas de base
 
 ```bash
 # Clonar o repositório
-git clone https://github.com/seu-usuario/RaioX_Publico_BR.git
-cd RaioX_Publico_BR
+git clone https://github.com/seu-usuario/HORUS.git
+cd HORUS
 
 # Criar ambiente virtual
 python -m venv .venv
@@ -85,37 +85,37 @@ copy .env.example .env
 
 ```bash
 # Analisar por CPF
-raiox analise --cpf 12345678900
+horus analise --cpf 12345678900
 
 # Analisar por nome
-raiox analise --nome "Fulano de Tal"
+horus analise --nome "Fulano de Tal"
 
 # Analisar empresa por CNPJ
-raiox analise --cnpj 12345678000100
+horus analise --cnpj 12345678000100
 
 # Atualizar base de dados
-raiox atualizar --fonte transparencia
-raiox atualizar --todas
+horus atualizar --fonte transparencia
+horus atualizar --todas
 
 # Exportar relatório
-raiox exportar --cpf 12345678900 --formato html
+horus exportar --cpf 12345678900 --formato html
 
 # Exportar grafo
-raiox grafo --cpf 12345678900 --profundidade 2
+horus grafo --cpf 12345678900 --profundidade 2
 ```
 
 ### Via Dashboard Web
 
 ```bash
-streamlit run raiox/web.py
+streamlit run horus/web.py
 ```
 
 ### Via Python
 
 ```python
-from raiox.config import Config
-from raiox.database import DatabaseManager
-from raiox.risk_engine import RiskEngine
+from horus.config import Config
+from horus.database import DatabaseManager
+from horus.risk_engine import RiskEngine
 
 config = Config()
 db = DatabaseManager(config)

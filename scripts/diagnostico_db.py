@@ -1,6 +1,6 @@
 """Diagnóstico rápido do banco de dados."""
-from raiox.config import Config
-from raiox.database import DatabaseManager
+from horus.config import Config
+from horus.database import DatabaseManager
 
 db = DatabaseManager(Config())
 

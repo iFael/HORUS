@@ -1,1 +1,1 @@
-"""Testes do RaioX Público BR."""
+"""Testes do HORUS."""

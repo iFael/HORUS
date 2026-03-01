@@ -1,4 +1,4 @@
-"""Testes para raiox.database."""
+"""Testes para horus.database."""
 
 import pandas as pd
 import pytest

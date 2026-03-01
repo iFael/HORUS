@@ -26,7 +26,7 @@ def integration_db(tmp_path_factory):
     """Banco compartilhado para todos os testes de integração."""
     tmp = tmp_path_factory.mktemp("integration_data")
     os.environ["DATA_DIR"] = str(tmp)
-    from raiox.config import Config, Paths
+    from horus.config import Config, Paths
     paths = Paths(
         data=tmp,
         raw=tmp / "raw",
@@ -35,7 +35,7 @@ def integration_db(tmp_path_factory):
         db=tmp / "test.db",
     )
     config = Config(paths=paths)
-    from raiox.database import DatabaseManager
+    from horus.database import DatabaseManager
     return DatabaseManager(config)
 
 
@@ -44,14 +44,14 @@ def integration_db(tmp_path_factory):
 # ---------------------------------------------------------------
 class TestBCBIntegration:
     def test_extract_selic(self, integration_db):
-        from raiox.etl.bcb import BCBETL
+        from horus.etl.bcb import BCBETL
         etl = BCBETL(integration_db)
         raw = etl.extract(series=["selic"], data_inicio="01/01/2025", data_fim="31/01/2025")
         assert "selic" in raw
         assert len(raw["selic"]) > 0
 
     def test_transform(self, integration_db):
-        from raiox.etl.bcb import BCBETL
+        from horus.etl.bcb import BCBETL
         etl = BCBETL(integration_db)
         raw = etl.extract(series=["selic"], data_inicio="01/01/2025", data_fim="31/01/2025")
         df = etl.transform(raw)
@@ -65,14 +65,14 @@ class TestBCBIntegration:
 # ---------------------------------------------------------------
 class TestIBGEIntegration:
     def test_extract_ipca(self, integration_db):
-        from raiox.etl.ibge import IBGEETL
+        from horus.etl.ibge import IBGEETL
         etl = IBGEETL(integration_db)
         raw = etl.extract(tabelas=["ipca_mensal"])
         assert "ipca_mensal" in raw
         assert len(raw["ipca_mensal"]) > 0
 
     def test_localidades(self, integration_db):
-        from raiox.etl.ibge import IBGEETL
+        from horus.etl.ibge import IBGEETL
         etl = IBGEETL(integration_db)
         estados = etl._get_localidades()
         assert len(estados) >= 27  # 26 estados + DF
@@ -83,14 +83,14 @@ class TestIBGEIntegration:
 # ---------------------------------------------------------------
 class TestSICONFIIntegration:
     def test_extract_entes(self, integration_db):
-        from raiox.etl.siconfi import SICONFIETL
+        from horus.etl.siconfi import SICONFIETL
         etl = SICONFIETL(integration_db)
         raw = etl.extract()
         assert "entes" in raw
         assert len(raw["entes"]) > 100
 
     def test_transform(self, integration_db):
-        from raiox.etl.siconfi import SICONFIETL
+        from horus.etl.siconfi import SICONFIETL
         etl = SICONFIETL(integration_db)
         raw = etl.extract()
         df = etl.transform(raw)
@@ -103,14 +103,14 @@ class TestSICONFIIntegration:
 # ---------------------------------------------------------------
 class TestIPEADataIntegration:
     def test_extract_pib(self, integration_db):
-        from raiox.etl.ipeadata import IPEADataETL
+        from horus.etl.ipeadata import IPEADataETL
         etl = IPEADataETL(integration_db)
         raw = etl.extract(series=["pib_per_capita"])
         assert "pib_per_capita" in raw
         assert len(raw["pib_per_capita"]) > 0
 
     def test_transform(self, integration_db):
-        from raiox.etl.ipeadata import IPEADataETL
+        from horus.etl.ipeadata import IPEADataETL
         etl = IPEADataETL(integration_db)
         raw = etl.extract(series=["pib_per_capita"])
         df = etl.transform(raw)
@@ -123,14 +123,14 @@ class TestIPEADataIntegration:
 # ---------------------------------------------------------------
 class TestQueridoDiarioIntegration:
     def test_extract(self, integration_db):
-        from raiox.etl.diarios import DiariosETL
+        from horus.etl.diarios import DiariosETL
         etl = DiariosETL(integration_db)
         raw = etl.extract(query="licitacao", max_pages=1)
         assert isinstance(raw, list)
         assert len(raw) > 0
 
     def test_transform(self, integration_db):
-        from raiox.etl.diarios import DiariosETL
+        from horus.etl.diarios import DiariosETL
         etl = DiariosETL(integration_db)
         raw = etl.extract(query="licitacao", max_pages=1)
         df = etl.transform(raw)
@@ -144,7 +144,7 @@ class TestQueridoDiarioIntegration:
 # ---------------------------------------------------------------
 class TestPNCPIntegration:
     def test_extract_contratacoes(self, integration_db):
-        from raiox.etl.pncp import PNCPETL
+        from horus.etl.pncp import PNCPETL
         etl = PNCPETL(integration_db)
         raw = etl.extract(data_inicio="20250101", data_fim="20250131",
                           modalidades=[8], max_pages=1)
@@ -152,7 +152,7 @@ class TestPNCPIntegration:
         assert len(raw) > 0
 
     def test_transform(self, integration_db):
-        from raiox.etl.pncp import PNCPETL
+        from horus.etl.pncp import PNCPETL
         etl = PNCPETL(integration_db)
         raw = etl.extract(data_inicio="20250101", data_fim="20250131",
                           modalidades=[8], max_pages=1)
@@ -181,13 +181,13 @@ class TestTSEIntegration:
 # ---------------------------------------------------------------
 class TestCVMIntegration:
     def test_extract_cia_aberta(self, integration_db):
-        from raiox.etl.cvm import CVMETL
+        from horus.etl.cvm import CVMETL
         etl = CVMETL(integration_db)
         raw = etl.extract()
         assert "cia_aberta" in raw
 
     def test_transform_cia_aberta(self, integration_db):
-        from raiox.etl.cvm import CVMETL
+        from horus.etl.cvm import CVMETL
         etl = CVMETL(integration_db)
         raw = etl.extract()
         transformed = etl.transform(raw)
@@ -209,7 +209,7 @@ class TestTransparenciaIntegration:
 
     def test_extract_servidores(self, integration_db):
         """Usa endpoint 'servidores' com cpf (não por-nome, que é 403)."""
-        from raiox.etl.transparencia import TransparenciaETL
+        from horus.etl.transparencia import TransparenciaETL
         etl = TransparenciaETL(integration_db)
         # CPF fictício — retorna lista vazia, mas sem erro de API
         servidores = etl.extract_servidores(cpf="00000000191")
@@ -217,7 +217,7 @@ class TestTransparenciaIntegration:
 
     def test_extract_contratos(self, integration_db):
         """Contratos requer codigoOrgao (SIAPE)."""
-        from raiox.etl.transparencia import TransparenciaETL
+        from horus.etl.transparencia import TransparenciaETL
         etl = TransparenciaETL(integration_db)
         contratos = etl.extract_contratos(codigo_orgao="26246")
         assert isinstance(contratos, list)
@@ -225,7 +225,7 @@ class TestTransparenciaIntegration:
 
     def test_extract_emendas(self, integration_db):
         """Emendas requer ano."""
-        from raiox.etl.transparencia import TransparenciaETL
+        from horus.etl.transparencia import TransparenciaETL
         etl = TransparenciaETL(integration_db)
         emendas = etl.extract_emendas(ano=2024)
         assert isinstance(emendas, list)
@@ -233,7 +233,7 @@ class TestTransparenciaIntegration:
 
     def test_extract_sancoes(self, integration_db):
         """Sanções CGU (CEIS, CNEP, CEAF, CEPIM) — mesma API do Portal."""
-        from raiox.etl.cgu_sancoes import SancoesETL
+        from horus.etl.cgu_sancoes import SancoesETL
         etl = SancoesETL(integration_db)
         raw = etl.extract()
         assert isinstance(raw, dict)
@@ -246,7 +246,7 @@ class TestTransparenciaIntegration:
 class TestReceitaFederalIntegration:
     def test_list_remote_files(self, integration_db):
         """Tenta listar ZIPs — skip se servidor indisponível."""
-        from raiox.etl.receita_cnpj import ReceitaCNPJETL
+        from horus.etl.receita_cnpj import ReceitaCNPJETL
         etl = ReceitaCNPJETL(integration_db)
         try:
             urls = etl._list_remote_files("Empresas")
