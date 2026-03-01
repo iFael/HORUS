@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
+import threading
 import time
 import unicodedata
 from collections import defaultdict
@@ -119,24 +120,32 @@ def mesmo_sobrenome(nome1: str, nome2: str) -> bool:
 # ---------------------------------------------------------------------------
 
 class RateLimiter:
-    """Rate limiter simples por chave."""
+    """Rate limiter thread-safe por chave.
+
+    Permite múltiplas threads concorrentes respeitando o limite por minuto.
+    Chaves diferentes (APIs distintas) não se bloqueiam mutuamente.
+    """
 
     def __init__(self) -> None:
         self._timestamps: dict[str, list[float]] = defaultdict(list)
+        self._lock = threading.Lock()
 
     def wait(self, key: str, max_per_minute: int) -> None:
-        """Aguarda se necessário para respeitar o limite."""
-        now = time.time()
-        window = 60.0
-        times = self._timestamps[key]
-        # Limpa timestamps fora da janela
-        self._timestamps[key] = [t for t in times if now - t < window]
-        if len(self._timestamps[key]) >= max_per_minute:
-            oldest = self._timestamps[key][0]
-            sleep_time = window - (now - oldest) + 0.1
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-        self._timestamps[key].append(time.time())
+        """Aguarda se necessário para respeitar o limite. Thread-safe."""
+        while True:
+            with self._lock:
+                now = time.time()
+                window = 60.0
+                self._timestamps[key] = [
+                    t for t in self._timestamps[key] if now - t < window
+                ]
+                if len(self._timestamps[key]) < max_per_minute:
+                    self._timestamps[key].append(now)
+                    return
+                oldest = self._timestamps[key][0]
+                sleep_time = window - (now - oldest) + 0.05
+            # Libera lock enquanto dorme — outras chaves prosseguem
+            time.sleep(min(sleep_time, 0.5))
 
 
 # Instância global

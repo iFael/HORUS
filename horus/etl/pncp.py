@@ -21,7 +21,7 @@ class PNCPETL(BaseETL):
     def _get(self, path: str, params: dict | None = None) -> dict | list:
         rate_limiter.wait("pncp", max_per_minute=60)
         url = f"{self.config.urls.pncp}/{path}"
-        resp = requests.get(url, params=params or {}, timeout=60)
+        resp = self._session.get(url, params=params or {}, timeout=60)
         resp.raise_for_status()
         return resp.json()
 
@@ -71,8 +71,10 @@ class PNCPETL(BaseETL):
         max_pages = kwargs.get("max_pages", 5)
         modalidades = kwargs.get("modalidades", list(self.MODALIDADES.values()))
 
-        all_data: list[dict] = []
-        for mod_code in modalidades:
+        from concurrent.futures import ThreadPoolExecutor
+
+        def _fetch_modalidade(mod_code: int) -> list[dict]:
+            items: list[dict] = []
             for page in range(1, max_pages + 1):
                 batch = self.extract_contratacoes(
                     cnpj_fornecedor=cnpj, data_inicio=data_inicio,
@@ -80,7 +82,14 @@ class PNCPETL(BaseETL):
                 )
                 if not batch:
                     break
-                all_data.extend(batch)
+                items.extend(batch)
+            return items
+
+        all_data: list[dict] = []
+        with ThreadPoolExecutor(max_workers=min(4, len(modalidades))) as exe:
+            for result in exe.map(_fetch_modalidade, modalidades):
+                all_data.extend(result)
+
         return all_data
 
     def transform(self, raw: Any, **kwargs: Any) -> pd.DataFrame:

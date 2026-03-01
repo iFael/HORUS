@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
+import requests
+from requests.adapters import HTTPAdapter
 
 from horus.config import Config
 from horus.database import DatabaseManager
@@ -22,6 +24,11 @@ class BaseETL(abc.ABC):
         self.db = db
         self.config = config or db.config
         self.logger = get_logger(f"etl.{self.nome_fonte}", self.config.log_level)
+        # Session HTTP com connection pooling — reusa conexões TCP/SSL
+        self._session = requests.Session()
+        _adapter = HTTPAdapter(pool_connections=10, pool_maxsize=20)
+        self._session.mount("https://", _adapter)
+        self._session.mount("http://", _adapter)
 
     # ------------------------------------------------------------------
     # Template Method

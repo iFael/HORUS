@@ -34,7 +34,7 @@ class SancoesETL(BaseETL):
     def _get(self, endpoint: str, params: dict | None = None) -> list[dict]:
         rate_limiter.wait("transparencia", max_per_minute=80)
         url = f"{self.config.urls.transparencia}/{endpoint}"
-        resp = requests.get(url, headers=self._headers(), params=params or {}, timeout=60)
+        resp = self._session.get(url, headers=self._headers(), params=params or {}, timeout=60)
         resp.raise_for_status()
         data = resp.json()
         return data if isinstance(data, list) else [data]
@@ -56,7 +56,10 @@ class SancoesETL(BaseETL):
         cpf_cnpj = limpar_documento(kwargs.get("cpf_cnpj", ""))
         result: dict[str, list[dict]] = {}
 
-        for tipo, endpoint in self.ENDPOINTS.items():
+        from concurrent.futures import ThreadPoolExecutor
+
+        def _fetch_tipo(item: tuple[str, str]) -> tuple[str, list[dict]]:
+            tipo, endpoint = item
             params: dict[str, Any] = {}
             if cpf_cnpj:
                 if len(cpf_cnpj) == 11:
@@ -65,10 +68,15 @@ class SancoesETL(BaseETL):
                     params["cnpjSancionado"] = cpf_cnpj
             try:
                 data = self._get_paginated(endpoint, params)
-                if data:
-                    result[tipo] = data
+                return (tipo, data)
             except Exception as e:
                 self.logger.warning("Erro ao extrair %s: %s", tipo, e)
+                return (tipo, [])
+
+        with ThreadPoolExecutor(max_workers=4) as exe:
+            for tipo, data in exe.map(_fetch_tipo, self.ENDPOINTS.items()):
+                if data:
+                    result[tipo] = data
 
         return result
 

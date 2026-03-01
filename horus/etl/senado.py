@@ -21,8 +21,8 @@ class SenadoETL(BaseETL):
     def _get(self, endpoint: str, params: dict | None = None) -> dict:
         rate_limiter.wait("senado", max_per_minute=60)
         url = f"{self.config.urls.senado}/{endpoint}"
-        resp = requests.get(url, params=params or {}, timeout=60,
-                            headers={"Accept": "application/json"})
+        resp = self._session.get(url, params=params or {}, timeout=60,
+                                 headers={"Accept": "application/json"})
         resp.raise_for_status()
         return resp.json()
 

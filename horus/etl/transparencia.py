@@ -45,7 +45,7 @@ class TransparenciaETL(BaseETL):
     def _get(self, endpoint: str, params: dict | None = None) -> list[dict]:
         rate_limiter.wait("transparencia", max_per_minute=80)
         url = f"{self.config.urls.transparencia}/{endpoint}"
-        resp = requests.get(url, headers=self._headers(), params=params or {}, timeout=60)
+        resp = self._session.get(url, headers=self._headers(), params=params or {}, timeout=60)
         resp.raise_for_status()
         data = resp.json()
         return data if isinstance(data, list) else [data]

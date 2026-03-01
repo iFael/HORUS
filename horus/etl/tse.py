@@ -34,7 +34,7 @@ class TSEETL(BaseETL):
         # Tentar formato CKAN
         api_url = f"https://dadosabertos.tse.jus.br/api/3/action/package_show?id={dataset_id}"
         try:
-            resp = requests.get(api_url, timeout=30)
+            resp = self._session.get(api_url, timeout=30)
             if resp.status_code == 200:
                 data = resp.json()
                 resources = data.get("result", {}).get("resources", [])
@@ -46,7 +46,7 @@ class TSEETL(BaseETL):
                         if dest.exists() and dest.stat().st_size > 0:
                             return dest
                         self.logger.info("Baixando TSE: %s", fname)
-                        dl = requests.get(url, stream=True, timeout=120)
+                        dl = self._session.get(url, stream=True, timeout=120)
                         dl.raise_for_status()
                         with open(dest, "wb") as f:
                             for chunk in dl.iter_content(8192):

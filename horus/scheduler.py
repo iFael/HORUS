@@ -122,7 +122,7 @@ class HorusScheduler:
             self._status["current_task"] = None
 
     def _job_quick_scan(self) -> None:
-        """Varredura rápida: emendas + contratos + anomalias (sem re-descoberta)."""
+        """Varredura rápida: emendas + contratos + sanções em paralelo + anomalias."""
         self._status["current_task"] = "QUICK SCAN"
         self._notify("scan_start", {"type": "quick"})
         logger.info("── QUICK SCAN INICIANDO ──")
@@ -139,27 +139,36 @@ class HorusScheduler:
             pass
 
         try:
+            from concurrent.futures import ThreadPoolExecutor, as_completed
             from horus.scanner import PoliticianScanner
             scanner = PoliticianScanner(self._db, self._config)
 
-            # Só coleta dados novos + re-analisa
-            n_emendas = scanner.enrich_emendas()
-            n_contratos = scanner.enrich_contratos()
-            n_sancoes = scanner.enrich_sancoes()
+            # Coleta em paralelo (3 fontes simultâneas)
+            tasks = {
+                "emendas": scanner.enrich_emendas,
+                "contratos": scanner.enrich_contratos,
+                "sancoes": scanner.enrich_sancoes,
+            }
+            result: dict[str, int] = {}
 
-            # Re-detectar anomalias
+            with ThreadPoolExecutor(max_workers=3) as exe:
+                futures = {exe.submit(fn): name for name, fn in tasks.items()}
+                for future in as_completed(futures):
+                    name = futures[future]
+                    try:
+                        result[name] = future.result()
+                    except Exception as e:
+                        logger.error("Quick scan %s erro: %s", name, e)
+                        result[name] = 0
+
+            # Re-detectar anomalias (precisa de todos os dados)
             from horus.anomaly_detector import AnomalyDetector
             detector = AnomalyDetector(self._db, self._config)
             insights = detector.detect_all()
 
             self._status["last_quick_scan"] = datetime.now().isoformat()
             self._status["scan_count"] += 1
-            result = {
-                "emendas": n_emendas,
-                "contratos": n_contratos,
-                "sancoes": n_sancoes,
-                "insights": len(insights),
-            }
+            result["insights"] = len(insights)
 
             # Registrar conclusão na tabela de varreduras
             try:
