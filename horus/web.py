@@ -593,15 +593,22 @@ def make_exposure_by_type(insights: list) -> go.Figure:
 
 
 def make_top_politicos_chart(top_pols: list) -> go.Figure:
+    # Filtrar entradas sem nome
+    top_pols = [p for p in top_pols if p.get("politico_nome", "").strip()]
     if not top_pols:
         fig = go.Figure()
         fig.update_layout(**PLOTLY_LAYOUT, height=300)
+        fig.add_annotation(
+            text="Nenhum insight vinculado a político ainda",
+            xref="paper", yref="paper", x=0.5, y=0.5,
+            showarrow=False, font=dict(size=13, color="#6b7280"),
+        )
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
         return fig
 
-    # Filtrar entradas sem nome
-    top_pols = [p for p in top_pols if p.get("politico_nome", "").strip()]
     nomes = [p["politico_nome"][:25] for p in top_pols[:10]]
-    valores = [p["exposicao_total"] for p in top_pols[:10]]
+    valores = [p.get("exposicao_total") or 0 for p in top_pols[:10]]
 
     fig = go.Figure(go.Bar(
         x=nomes, y=valores,
@@ -1160,10 +1167,12 @@ def _render_tab_database(db: DatabaseManager):
 
 
 def _render_ranking_table(top_pols: list):
+    # Filtrar entradas sem nome
+    top_pols = [p for p in top_pols if p.get("politico_nome", "").strip()]
     if not top_pols:
         st.markdown(
             '<div class="card" style="text-align:center;padding:20px;color:#b0b8cc;">'
-            'Dados sendo processados...'
+            'Nenhum insight vinculado a político ainda.'
             '</div>',
             unsafe_allow_html=True,
         )
@@ -1174,8 +1183,6 @@ def _render_ranking_table(top_pols: list):
         '<th>#</th><th>POLÍTICO</th><th>INSIGHTS</th><th>EXPOSIÇÃO</th><th>SCORE</th>'
         '</tr></thead><tbody>'
     )
-    # Filtrar entradas sem nome
-    top_pols = [p for p in top_pols if p.get("politico_nome", "").strip()]
     for i, pol in enumerate(top_pols[:10], 1):
         exp_fmt = formatar_valor(pol.get("exposicao_total", 0))
         score = pol.get("max_score", 0)
