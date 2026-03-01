@@ -10,6 +10,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Streamlit Cloud: secrets são injetados via st.secrets → variáveis de ambiente
+try:
+    import streamlit as _st
+    for _k, _v in _st.secrets.items():
+        if isinstance(_v, str):
+            os.environ.setdefault(_k, _v)
+except Exception:
+    pass  # Fora do Streamlit ou sem secrets configurados
+
 # ---------------------------------------------------------------------------
 # Diretórios
 # ---------------------------------------------------------------------------
