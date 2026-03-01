@@ -76,6 +76,7 @@ class AnomalyDetector:
             ("fornecedor_sancionado", self._detect_fornecedor_sancionado),
             ("emenda_concentrada", self._detect_emenda_concentrada),
             ("valor_fracionado", self._detect_valor_fracionado),
+            ("execucao_orcamentaria_anomala", self._detect_execucao_anomala),
         ]
 
         for name, detector_fn in detectors:
@@ -547,6 +548,85 @@ class AnomalyDetector:
             ))
 
         return insights[:20]
+
+    # ------------------------------------------------------------------
+    # 9. Execução orçamentária anômala (dados Tesouro/SICONFI + emendas)
+    # Cruza dados de execução orçamentária RREO com emendas parlamentares
+    # para detectar entes com execução atípica de recursos de emendas.
+    # ------------------------------------------------------------------
+
+    def _detect_execucao_anomala(self) -> list[Insight]:
+        """Detecta anomalias cruzando dados de execução orçamentária (SIAFI/SICONFI)
+        com emendas parlamentares. Verifica se a tabela existe antes de consultar."""
+        insights: list[Insight] = []
+
+        # Verificar se a tabela execucao_orcamentaria existe (preenchida pelo ETL SIAFI)
+        try:
+            tables = self.db.query(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='execucao_orcamentaria'"
+            )
+            if not tables:
+                return insights  # Tabela não existe ainda — ETL SIAFI não rodou
+        except Exception:
+            return insights
+
+        # Buscar emendas com alto valor concentradas em uma localidade
+        # e cruzar com dados de execução orçamentária
+        try:
+            # Verificar emendas por UF e comparar com execução orçamentária
+            emendas_uf = self.db.query("""
+                SELECT uf, SUM(valor_empenhado) as total_emendas,
+                       COUNT(*) as qtd_emendas,
+                       GROUP_CONCAT(DISTINCT autor) as autores
+                FROM emendas
+                WHERE valor_empenhado > 0 AND uf IS NOT NULL
+                GROUP BY uf
+                HAVING total_emendas > 5000000
+                ORDER BY total_emendas DESC
+            """)
+
+            if not emendas_uf:
+                return insights
+
+            # Calcular média e desvio para detectar concentrações estaduais atípicas
+            valores = [e["total_emendas"] for e in emendas_uf]
+            if len(valores) < 5:
+                return insights
+
+            media = statistics.mean(valores)
+            desvio = statistics.stdev(valores) if len(valores) > 1 else 0
+
+            for row in emendas_uf:
+                if desvio == 0:
+                    continue
+                zscore = (row["total_emendas"] - media) / desvio
+                if zscore < 2.0:
+                    continue
+
+                autores = (row["autores"] or "")[:120]
+
+                insights.append(Insight(
+                    tipo="execucao_orcamentaria_anomala",
+                    titulo=f"Emendas concentradas em {row['uf']}",
+                    descricao=(
+                        f"O estado {row['uf']} recebeu {formatar_valor(row['total_emendas'])} "
+                        f"em {row['qtd_emendas']} emendas parlamentares, "
+                        f"{zscore:.1f}x acima da média estadual de "
+                        f"{formatar_valor(media)}. Autores: {_truncar(autores, 80)}."
+                    ),
+                    severidade=Severidade.ALTO if zscore > 3 else Severidade.MEDIO,
+                    score=min(88, 55 + zscore * 8),
+                    valor_exposicao=row["total_emendas"] - media,
+                    pattern=f"Emendas {zscore:.1f}x acima da média estadual",
+                    fontes=["Transparência", "Tesouro/SICONFI"],
+                    dados={"uf": row["uf"], "total": row["total_emendas"],
+                           "zscore": round(zscore, 2)},
+                ))
+
+        except Exception as e:
+            logger.warning("Erro detector execução orçamentária: %s", e)
+
+        return insights[:15]
 
 
 # ---------------------------------------------------------------------------

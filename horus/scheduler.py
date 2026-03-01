@@ -161,6 +161,14 @@ class HorusScheduler:
                         logger.error("Quick scan %s erro: %s", name, e)
                         result[name] = 0
 
+            # Fontes complementares (ANEEL, ANTT, SIAFI, INPE)
+            try:
+                extras = scanner.enrich_fontes_complementares()
+                result["fontes_extras"] = sum(extras.values())
+            except Exception as e:
+                logger.warning("Quick scan fontes extras erro: %s", e)
+                result["fontes_extras"] = 0
+
             # Re-detectar anomalias (precisa de todos os dados)
             from horus.anomaly_detector import AnomalyDetector
             detector = AnomalyDetector(self._db, self._config)

@@ -234,6 +234,71 @@ class PoliticianScanner:
         return total
 
     # ------------------------------------------------------------------
+    # 2b. Fontes complementares (novos ETLs ativos)
+    # ------------------------------------------------------------------
+
+    def enrich_fontes_complementares(self) -> dict[str, int]:
+        """Executa ETLs complementares (ANEEL, ANTT, SIAFI, INPE) em paralelo.
+        Retorna dict {nome: registros_coletados}."""
+        from horus.etl.registry import update_execution
+
+        def _run_etl(nome: str, etl_cls, kwargs: dict) -> tuple[str, int]:
+            try:
+                etl = etl_cls(self.db)
+                raw = etl.extract(**kwargs)
+                if raw is None or (isinstance(raw, pd.DataFrame) and raw.empty):
+                    update_execution(nome, 0)
+                    return nome, 0
+                df = etl.transform(raw, **kwargs)
+                count = etl.load(df, **kwargs) if not df.empty else 0
+                update_execution(nome, count)
+                logger.info("ETL %s: %d registros", nome, count)
+                return nome, count
+            except Exception as e:
+                update_execution(nome, 0, str(e))
+                logger.warning("ETL %s erro: %s", nome, e)
+                return nome, 0
+
+        # Importar apenas os que funcionam (testados)
+        tasks = []
+        try:
+            from horus.etl.aneel import ANEELETL
+            tasks.append(("aneel", ANEELETL, {}))
+        except ImportError:
+            pass
+        try:
+            from horus.etl.antt import ANTTETL
+            tasks.append(("antt", ANTTETL, {}))
+        except ImportError:
+            pass
+        try:
+            from horus.etl.siafi import SIAFIETL
+            tasks.append(("siafi", SIAFIETL, {"ano": datetime.now().year}))
+        except ImportError:
+            pass
+        try:
+            from horus.etl.inpe import INPEETL
+            tasks.append(("inpe", INPEETL, {"max_features": 100}))
+        except ImportError:
+            pass
+
+        result: dict[str, int] = {}
+        if not tasks:
+            return result
+
+        with ThreadPoolExecutor(max_workers=min(4, len(tasks))) as exe:
+            futures = {
+                exe.submit(_run_etl, nome, cls, kw): nome
+                for nome, cls, kw in tasks
+            }
+            for future in as_completed(futures):
+                nome, count = future.result()
+                result[nome] = count
+
+        logger.info("Fontes complementares: %s", result)
+        return result
+
+    # ------------------------------------------------------------------
     # 3. Pipeline completo
     # ------------------------------------------------------------------
 
@@ -302,7 +367,17 @@ class PoliticianScanner:
                 n_despesas = self.enrich_despesas()
                 resumo["etapas"]["despesas"] = n_despesas
 
-            # Etapa 4: Análise de anomalias (precisa de todos os dados)
+            # Etapa 4: Fontes complementares (ANEEL, ANTT, SIAFI, INPE)
+            _log("FONTES_EXTRAS", "Coletando fontes complementares...")
+            try:
+                extras = self.enrich_fontes_complementares()
+                resumo["etapas"]["fontes_extras"] = extras
+                _log("FONTES_EXTRAS", f"{sum(extras.values())} registros de {len(extras)} fontes")
+            except Exception as e:
+                logger.warning("Erro fontes extras: %s", e)
+                resumo["etapas"]["fontes_extras"] = {}
+
+            # Etapa 5: Análise de anomalias (precisa de todos os dados)
             _log("ANALISE", "Detectando anomalias e padrões...")
             from horus.anomaly_detector import AnomalyDetector
             detector = AnomalyDetector(self.db, self.config)

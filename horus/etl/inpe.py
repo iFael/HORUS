@@ -1,4 +1,7 @@
-"""ETL do INPE — DETER e PRODES (desmatamento via TerraBrasilis)."""
+"""ETL do INPE — DETER e PRODES (desmatamento via TerraBrasilis WFS).
+
+A API REST /api/v1/alerts retorna 404. O WFS GeoServer funciona (testado 2026-03-01).
+"""
 
 from __future__ import annotations
 
@@ -11,55 +14,72 @@ from horus.utils import rate_limiter
 
 
 class INPEETL(BaseETL):
-    """Extrator de dados de desmatamento do INPE (TerraBrasilis)."""
+    """Extrator de dados de desmatamento do INPE via WFS GeoServer."""
 
     nome_fonte = "inpe"
 
-    BASE_URL = "http://terrabrasilis.dpi.inpe.br/api/v1"
+    BASE_URL = "http://terrabrasilis.dpi.inpe.br/geoserver"
 
-    ENDPOINTS = {
-        "deter_amazonia": "/alerts?biome=amazon",
-        "deter_cerrado": "/alerts?biome=cerrado",
-        "prodes_amazonia": "/prodes?biome=amazon",
+    LAYERS = {
+        "deter_amazonia": "deter-amz:deter_amz",
+        "deter_cerrado": "deter-cerrado:deter_cerrado",
+        "prodes_amazonia": "prodes-amz:prodes_amz",
     }
 
-    def _get(self, path: str) -> list[dict]:
-        rate_limiter.wait("inpe", max_per_minute=15)
-        url = f"{self.BASE_URL}{path}"
-        resp = self._session.get(url, timeout=120)
+    def _get_wfs(self, layer: str, max_features: int = 500) -> list[dict]:
+        """Busca features via WFS GetFeature em GeoJSON."""
+        rate_limiter.wait("inpe", max_per_minute=10)
+        workspace = layer.split(":")[0]
+        url = f"{self.BASE_URL}/{workspace}/ows"
+        params = {
+            "service": "WFS",
+            "version": "1.0.0",
+            "request": "GetFeature",
+            "typeName": layer,
+            "maxFeatures": max_features,
+            "outputFormat": "application/json",
+        }
+        resp = self._session.get(url, params=params, timeout=120)
         resp.raise_for_status()
         data = resp.json()
-        return data if isinstance(data, list) else data.get("features", [data])
+        return data.get("features", [])
 
     def extract(self, **kwargs: Any) -> dict[str, list[dict]]:
-        endpoints = kwargs.get("endpoints", list(self.ENDPOINTS.keys()))
+        layers = kwargs.get("layers", list(self.LAYERS.keys()))
+        max_features = kwargs.get("max_features", 200)
         result: dict[str, list[dict]] = {}
-        for nome in endpoints:
-            path = self.ENDPOINTS.get(nome)
-            if not path:
+        for nome in layers:
+            layer = self.LAYERS.get(nome)
+            if not layer:
                 continue
             try:
-                result[nome] = self._get(path)
+                features = self._get_wfs(layer, max_features)
+                result[nome] = features
+                self.logger.info("INPE %s: %d features", nome, len(features))
             except Exception as e:
                 self.logger.warning("Erro INPE %s: %s", nome, e)
         return result
 
     def transform(self, raw: Any, **kwargs: Any) -> pd.DataFrame:
-        frames = []
-        for nome, items in raw.items():
-            if not items:
-                continue
-            df = pd.DataFrame(items)
-            df["fonte"] = nome
-            frames.append(df)
-        return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        records = []
+        for nome, features in raw.items():
+            for feat in features:
+                props = feat.get("properties", {})
+                props["fonte"] = nome
+                # Extrair centroid se houver geometry
+                geom = feat.get("geometry")
+                if geom and geom.get("coordinates"):
+                    coords = geom["coordinates"]
+                    if geom.get("type") == "Point":
+                        props["longitude"] = coords[0]
+                        props["latitude"] = coords[1]
+                records.append(props)
+        return pd.DataFrame(records) if records else pd.DataFrame()
 
     def load(self, df: pd.DataFrame, **kwargs: Any) -> int:
         if df.empty:
             return 0
-        dest = self.config.paths.processed / "inpe_desmatamento.csv"
-        if dest.exists():
-            existing = pd.read_csv(dest, dtype=str)
-            df = pd.concat([existing, df], ignore_index=True).drop_duplicates()
-        df.to_csv(dest, index=False)
+        with self.db.connect() as conn:
+            df.to_sql("desmatamento", conn, if_exists="replace", index=False)
+        self.logger.info("INPE: %d registros na tabela desmatamento", len(df))
         return len(df)

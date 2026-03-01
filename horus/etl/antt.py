@@ -57,6 +57,7 @@ class ANTTETL(BaseETL):
     def load(self, df: pd.DataFrame, **kwargs: Any) -> int:
         if df.empty:
             return 0
-        dest = self.config.paths.processed / "antt_dados.csv"
-        df.to_csv(dest, index=False)
+        with self.db.connect() as conn:
+            df.to_sql("transportes_dados", conn, if_exists="replace", index=False)
+        self.logger.info("ANTT: %d registros na tabela transportes_dados", len(df))
         return len(df)

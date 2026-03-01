@@ -75,9 +75,7 @@ class ANEELETL(BaseETL):
     def load(self, df: pd.DataFrame, **kwargs: Any) -> int:
         if df.empty:
             return 0
-        dest = self.config.paths.processed / "aneel_dados.csv"
-        if dest.exists():
-            existing = pd.read_csv(dest, dtype=str)
-            df = pd.concat([existing, df], ignore_index=True).drop_duplicates()
-        df.to_csv(dest, index=False)
+        with self.db.connect() as conn:
+            df.to_sql("energia_dados", conn, if_exists="replace", index=False)
+        self.logger.info("ANEEL: %d registros na tabela energia_dados", len(df))
         return len(df)

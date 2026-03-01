@@ -362,7 +362,12 @@ COLORS = {
 def render_topbar(stats: dict):
     n_pol = stats.get("politicos", 0)
     n_ins = stats.get("insights", 0)
-    n_fontes = stats.get("fontes", 0) or 16
+    # Contar fontes ativas do registry
+    try:
+        from horus.etl.registry import get_registry, ETLStatus
+        n_fontes = sum(1 for e in get_registry() if e.status != ETLStatus.INATIVO)
+    except Exception:
+        n_fontes = stats.get("fontes", 0) or 16
     n_alertas = stats.get("alertas", 0)
 
     # Scheduler status para indicador LIVE
@@ -414,7 +419,7 @@ def render_exposure_banner(exposicao: float, total_insights: int, sev_counts: di
         <div class="exposure-label">EXPOSIÇÃO TOTAL</div>
         <div class="exposure-value">{formatar_valor(exposicao)}</div>
         <div class="exposure-meta">
-            {total_insights} irregularidades &nbsp;&middot;&nbsp; 16 fontes
+            {total_insights} irregularidades &nbsp;&middot;&nbsp; {n_fontes} fontes
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -698,8 +703,8 @@ def page_overview():
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    tab_insights, tab_analytics, tab_politicos, tab_scanner, tab_database = st.tabs(
-        ["⚡ INSIGHTS", "📊 ANALYTICS", "👤 POLÍTICOS", "🛡 SCANNER", "🗄 BASE DE DADOS"]
+    tab_insights, tab_analytics, tab_politicos, tab_scanner, tab_fontes, tab_database = st.tabs(
+        ["⚡ INSIGHTS", "📊 ANALYTICS", "👤 POLÍTICOS", "🛡 SCANNER", "📡 FONTES", "🗄 BASE DE DADOS"]
     )
 
     with tab_insights:
@@ -713,6 +718,9 @@ def page_overview():
 
     with tab_scanner:
         _render_tab_scanner(db)
+
+    with tab_fontes:
+        _render_tab_fontes()
 
     with tab_database:
         _render_tab_database(db)
@@ -777,6 +785,7 @@ def _render_tab_insights(mgr: InsightManager, stats: dict):
             "fornecedor_sancionado": "Fornecedor Sancionado",
             "emenda_concentrada": "Emenda Concentrada",
             "valor_fracionado": "Fracionamento de Valor",
+            "execucao_orcamentaria_anomala": "Execução Orçamentária Anômala",
         }
         tipos_presentes = sorted({i.get("tipo", "") for i in insights if i.get("tipo")})
         opcoes_indicador = ["Todos"] + [_TIPO_LABELS.get(t, t) for t in tipos_presentes]
@@ -1127,6 +1136,51 @@ def _render_tab_scanner(db: DatabaseManager):
         f'</div></div></div>',
         unsafe_allow_html=True,
     )
+
+
+def _render_tab_fontes():
+    """Aba FONTES: status de todos os módulos ETL."""
+    st.markdown('<div class="section-header">Fontes de Dados</div>', unsafe_allow_html=True)
+    try:
+        from horus.etl.registry import get_registry, ETLStatus
+
+        registry = get_registry()
+        integrados = [e for e in registry if e.status == ETLStatus.INTEGRADO]
+        ativos = [e for e in registry if e.status == ETLStatus.ATIVO]
+        inativos = [e for e in registry if e.status == ETLStatus.INATIVO]
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("🟢 Integradas", len(integrados))
+        c2.metric("🔵 Ativas", len(ativos))
+        c3.metric("🔴 Inativas", len(inativos))
+
+        def _build_rows(entries, color):
+            rows = []
+            for e in entries:
+                last = e.ultima_execucao or "—"
+                recs = f"{e.registros_coletados:,}" if e.registros_coletados else "—"
+                err = e.ultimo_erro or ""
+                rows.append({
+                    "Status": color,
+                    "Módulo": e.nome,
+                    "Fonte": e.descricao,
+                    "Última Exec.": last,
+                    "Registros": recs,
+                    "Erro": err[:80],
+                })
+            return rows
+
+        all_rows = (
+            _build_rows(integrados, "🟢 Integrada")
+            + _build_rows(ativos, "🔵 Ativa")
+            + _build_rows(inativos, "🔴 Inativa")
+        )
+
+        import pandas as pd
+        df = pd.DataFrame(all_rows)
+        st.dataframe(df, use_container_width=True, hide_index=True, height=600)
+    except Exception as exc:
+        st.error(f"Erro ao carregar registry: {exc}")
 
 
 def _render_tab_database(db: DatabaseManager):
